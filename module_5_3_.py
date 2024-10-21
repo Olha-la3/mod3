@@ -1,23 +1,3 @@
-#class House:
-#    def __init__(self, name, number_of_floors):
-       # self.name = name
-       # self.number_of_floors = number_of_floors
-
-
-# class Example:
-#
-#     def __new__(cls, *args, **kwargs:
-#         print(args)
-#         print(kwargs)
-#         return object.__new__(cls)
-#
-#     def __init__(self, first, second, third):
-#         print(first)
-#         print(second)
-#         print(third)
-#
-# ex = Example('data', second=25, third=3.14)
-
 class House:
     houses_history = []
 
