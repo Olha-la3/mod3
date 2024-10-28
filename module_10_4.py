@@ -97,7 +97,7 @@ class Guest(threading.Thread):
 # Класс Cafe: Управляет столами и очередью. Реализует методы guest_arrival и discuss_guests.
 
 class Cafe:
-    def __init__(self):
+    def __init__(self, table_count):
         self.tables = [Table(i) for i in range(table_count)]
         self.queue = Queue()
 
