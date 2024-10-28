@@ -1,4 +1,4 @@
-from queue import Queue
+
 # class Table:
 #
 # class Guest:
