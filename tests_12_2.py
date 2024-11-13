@@ -4,24 +4,6 @@ from runner_and_tournament import Tournament
 
 class TournamentTest(unittest.TestCase):
 
-    # def setUp(self):
-    #     runner1 = Runner('Усэйн', 10)
-    #     runner2 = Runner('Андрей', 9)
-    #     runner3 = Runner('Ник', 3)
-    #
-    # @classnethod
-    # def setUpClass(cls):
-    #     cls.all_results = {}
-    #
-    # def tearDownClass(self):
-    #     for i in cls.all_results:
-    #         print(i, cls.all_results)
-    #
-    # def testTournament(self):
-    #     tournament = Tournament(90)
-    #     cls.all_results = tournament.start()
-    #
-    #     self.assetTrue(sorted(cls.all_results[-1]), 'Ник')
 
     def setUp(cls):
         cls.usain = Runner('Усэйн', 10)
