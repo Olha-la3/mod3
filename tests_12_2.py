@@ -4,14 +4,6 @@ from runner_and_tournament import Tournament
 import random
 
 
-def frozen_decorator(func):
-    def wrapper(self, *args, **kwargs):
-        if self.is_frozen:
-            print('Тесты в этом кейсе заморожены')
-            raise unittest.SkipTest('Тесты в этом кейсе заморожены')
-        return func(self, *args, **kwargs)
-
-    return wrapper
 class TournamentTest(unittest.TestCase):
     is_frozen = True
 
