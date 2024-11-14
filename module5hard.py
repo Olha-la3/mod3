@@ -17,8 +17,6 @@ class User:
         # Проверка введенного пароля с хранившимся
         return hashlib.sha256(password.encode()).hexdigest() == self.hash_password(password)
 
-    # def str(self):
-    #     return (f"User(nickname={self.nickname}, age={self.age})
 
 class Video:
     def __init__(self, title, duration, time_now = 0, adult_mode = False):
