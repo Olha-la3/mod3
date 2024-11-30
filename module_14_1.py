@@ -15,29 +15,12 @@ CREATE TABLE IF NOT EXISTS Users (
 )
 ''')
 
-# Вставляем 10 записей
-# users_data = [
-#     ('User1', 'example1@gmail.com', 10, 1000),
-#     ('User2', 'example2@gmail.com', 20, 1000),
-#     ('User3', 'example3@gmail.com', 30, 1000),
-#     ('User4', 'example4@gmail.com', 40, 1000),
-#     ('User5', 'example5@gmail.com', 50, 1000),
-#     ('User6', 'example6@gmail.com', 60, 1000),
-#     ('User7', 'example7@gmail.com', 70, 1000),
-#     ('User8', 'example8@gmail.com', 80, 1000),
-#     ('User9', 'example9@gmail.com', 90, 1000),
-#     ('User10', 'example10@gmail.com', 100, 1000),
-# ]
-
 #
 cursor.execute("CREATE INDEX IF NOT EXISTS idx_email ON Users (email)")
-for i in range(10):
-    age = 10 * (i + 1)  # Возраст от 10 до 100, увеличивается на 10
+for i in range(1, 11):
+    age = 10 * (i)  # Возраст от 10 до 100, увеличивается на 10
     cursor.execute("INSERT INTO Users(username, email, age, balance) VALUES (?, ?, ?, ?)",
         (f"User{i}", f"example{i}@gmail.com", age, 1000))
-
-# Вставляем данные в таблицу
-# cursor.executemany('INSERT INTO Users (username, email, age, balance) VALUES (?, ?, ?, ?)', users_data)
 
 # Обновляем balance у каждой 2-ой записи, начиная с 1-ой
 cursor.execute('UPDATE Users SET balance = 500 WHERE id % 2 = 1')
