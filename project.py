@@ -1,89 +1,119 @@
 import os
 import pandas as pd
-import glob
 
 
-class PriceListAnalyzer:
+class PriceAnalyzer:
     def __init__(self, directory):
         self.directory = directory
-        self.data = pd.DataFrame()
+        self.data = []
+        self.search_results = []  # Список для хранения всех результатов поиска
 
     def load_prices(self):
-        # Получаем все файлы с именем, содержащим "price"
-        price_files = glob.glob(os.path.join(self.directory, '*price*.csv'))
+        for filename in os.listdir(self.directory):
+            if 'price' in filename and filename.endswith('.csv'):
+                filepath = os.path.join(self.directory, filename)
+                df = pd.read_csv(filepath)
 
-        # Обрабатываем каждый файл
-        for file in price_files:
-            try:
-                df = pd.read_csv(file, delimiter=',', encoding='utf-8')
+                # Определение названий колонок
+                product_col = next(
+                    (col for col in df.columns if col.lower() in ['название', 'продукт', 'товар', 'наименование']),
+                    None)
+                price_col = next((col for col in df.columns if col.lower() in ['цена', 'розница']), None)
+                weight_col = next((col for col in df.columns if col.lower() in ['фасовка', 'масса', 'вес']), None)
 
-                # Извлекаем нужные колонки
-                product_col = self.get_column_name(df, ['название', 'продукт', 'товар', 'наименование'])
-                price_col = self.get_column_name(df, ['цена', 'розница'])
-                weight_col = self.get_column_name(df, ['фасовка', 'масса', 'вес'])
-
-                # Игнорируем файл, если нет всех нужных колонок
+                # Если все необходимые колонки найдены
                 if product_col and price_col and weight_col:
-                    df = df[[product_col, price_col, weight_col]]
+                    for _, row in df.iterrows():
+                        product = row[product_col]
+                        price = row[price_col]
+                        weight = row[weight_col]
 
-                    # Переименовываем колонки
-                    df.columns = ['Наименование', 'Цена', 'Вес']
+                        # Обработка и добавление только если цена и вес корректны
+                        if pd.notna(price) and pd.notna(weight) and weight > 0:
+                            price_per_kg = price / weight
+                            self.data.append({
+                                'product': product,
+                                'price': price,
+                                'weight': weight,
+                                'file': filename,
+                                'price_per_kg': price_per_kg
+                            })
 
-                    # Добавляем информацию о файле
-                    df['Файл'] = os.path.basename(file)
+    def find_text(self, search_text):
+        # Находим продукты, содержащие search_text
+        filtered_data = [item for item in self.data if search_text.lower() in item['product'].lower()]
+        # Сортируем по цене за килограмм
+        filtered_data.sort(key=lambda x: x['price_per_kg'])
+        return filtered_data
 
-                    # Добавляем данные в общий DataFrame
-                    self.data = pd.concat([self.data, df], ignore_index=True)
-            except Exception as e:
-                print(f"Ошибка обработки файла {file}: {e}")
+    def export_to_html(self, data, output_file):
+        # Создаем HTML-таблицу
+        html_content = """
+        <html>
+        <head>
+        <title>Price List</title>
+        </head>
+        <body>
+        <h1>Price List</h1>
+        <table border="1">
+        <tr>
+        <th>№</th>
+        <th>Наименование</th>
+        <th>Цена</th>
+        <th>Вес</th>
+        <th>Файл</th>
+        <th>Цена за кг</th>
+        </tr>
+        """
 
-    def export_to_html(self, filename='prices.html'):
-        """Экспортирует данные в HTML файл."""
-        self.data.to_html(filename, index=False)
+        for idx, item in enumerate(data, 1):
+            html_content += f"""
+            <tr>
+            <td>{idx}</td>
+            <td>{item['product']}</td>
+            <td>{item['price']}</td>
+            <td>{item['weight']}</td>
+            <td>{item['file']}</td>
+            <td>{item['price_per_kg']:.2f}</td>
+            </tr>
+            """
 
-    def find_text(self, text):
-        """Ищет товары по тексту и возвращает отсортированные результаты по цене за килограмм."""
-        if self.data.empty:
-            print("Данные не загружены.")
-            return []
+        html_content += """
+        </table>
+        </body>
+        </html>
+        """
 
-        # Находим позиции по тексту
-        filtered_data = self.data[self.data['Наименование'].str.contains(text, na=False, case=False)]
-
-        # Рассчитываем цену за килограмм
-        if not filtered_data.empty:
-            filtered_data['Цена за кг'] = filtered_data['Цена'] / filtered_data['Вес']
-            filtered_data = filtered_data.sort_values(by='Цена за кг').reset_index(drop=True)
-            return filtered_data
-
-        return []
-
-    def get_column_name(self, df, possible_names):
-        """Возвращает название колонки, если она существует в DataFrame."""
-        for name in possible_names:
-            if name in df.columns:
-                return name
-        return None
+        with open(output_file, 'w', encoding='utf-8') as f:
+            f.write(html_content)
 
 
-# Основной код для работы с анализатором
-if __name__ == "__main__":
-    analyzer = PriceListAnalyzer(directory='path_to_your_directory')
+def main():
+    analyzer = PriceAnalyzer(directory='D:\_Практическое задание _Анализатор прайс-листов._\Прайсы')
     analyzer.load_prices()
 
-    print("Работа с анализатором прайс-листов.")
     while True:
-        user_input = input("Введите текст для поиска или 'exit' для выхода: ").strip()
-        if user_input.lower() == "exit":
+        search_text = input("Введите название товара для поиска (или 'exit' для выхода): ")
+        if search_text.lower() == 'exit':
+            if analyzer.search_results:
+                output_file = 'output.html'
+                analyzer.export_to_html(analyzer.search_results, output_file)
+                print(f"Данные экспортированы в файл {output_file}")
             print("Работа закончена.")
             break
 
-        results = analyzer.find_text(user_input)
-        if not results.empty:
-            print("Найденные позиции:")
-            print(results[['Наименование', 'Цена', 'Вес', 'Файл', 'Цена за кг']])
-        else:
-            print("По вашему запросу ничего не найдено.")
+        results = analyzer.find_text(search_text)
+        if results:
+            print(f"{'№':<3} {'Наименование':<30} {'Цена':<5} {'Вес':<5} {'Файл':<15} {'Цена за кг':<10}")
+            for idx, item in enumerate(results, 1):
+                print(
+                    f"{idx:<3} {item['product']:<30} {item['price']:<5} {item['weight']:<5} {item['file']:<15} {item['price_per_kg']:.2f}")
 
-    # Экспорт в HTML при завершении
-    analyzer.export_to_html()
+            # Сохраняем найденные товары в общий список
+            analyzer.search_results.extend(results)
+        else:
+            print("Товары не найдены.")
+
+
+if __name__ == '__main__':
+    main()
